@@ -15,6 +15,7 @@ RED= (200, 0, 0 )
 LIGHTRED= (255, 100, 100)
 PURPLE = (102, 0, 102)
 LIGHTPURPLE= (153, 0, 153)
+BLACK = (0, 0, 0)
 
 #PI
 pi = 3.1415926535897932
@@ -25,29 +26,57 @@ running = True
 game_over = True
 sbeve = False
 score = 0
+FOV  = pi/3
 
 #Settings
 mapD = 10
 sensitivity = 1/20
 speed = 0.15
+windowWidth = 720
+windowHeight = 480
 
 pygame.init()
 pygame.font.init()
 defaultFont = pygame.font.SysFont('Comic Sans MS', 30)
-screen = pygame.display.set_mode((1210,750))
+screen = pygame.display.set_mode((windowWidth,windowHeight))
 pygame.display.set_caption("Doom clone")
 clock = pygame.time.Clock()
 
 #Player class
 class Player:
-	x = 4.500
-	y = 4.500
-	AOV = 0
+	#Starting coordinates for the player
+	x = 1.5
+	y = 1.5
+	
+	#Direction at which the player is looking initially. This is the angle between the leftmost part of the FOV and the X-axis. The player is technically looking at an angle of 0.
+	AOV = FOV/2
+	
+	#Use this variable to store player movement direction. It keeps the sine and the cosine of the angle defined by the movement vector and the X-axis
+	direction = [0,0]
+	
+	#Rotate method for player
 	def rotate(self,dir):
 		self.AOV+= dir * pi*sensitivity
-	def move(self,dir):
-		self.x+= dir[0]*speed
-		self.y+= dir[1]*speed
+	
+	#Collision check
+	def checkCollision(self,map):
+		if map[math.floor(self.y + self.direction[1]*speed)][math.floor(self.x + self.direction[1]*speed)]==1:
+			return true
+		return false
+		
+	#Move method
+	def move(self):
+		#Check for collision
+		if self.checkCollision:
+			self.direction = [0,0]
+			return
+			
+		#Now move player in current direction
+		self.x+= self.direction[0]*speed
+		self.y+= self.direction[1]*speed
+		
+		#Reset direction
+		self.direction = [0,0]
 	def __init__(self):
 		return
 	
@@ -56,28 +85,20 @@ class Player:
 #Declare our player
 player = Player()
 
-#This is the game map
+#This is the game map. 1 means wall, 0 means empty space
 map = []
 map.append([1,1,1,1,1,1,1,1,1,1])
-map.append([1,0,0,0,1,0,0,0,0,1])
-map.append([1,0,1,0,1,1,0,1,1,1])
-map.append([1,0,0,0,1,0,0,1,0,1])
-map.append([1,0,0,1,0,0,0,1,0,1])
-map.append([1,1,0,0,0,1,0,0,0,1])
-map.append([1,0,1,0,1,1,0,1,0,1])
-map.append([1,0,0,0,0,1,0,1,0,1])
-map.append([1,0,1,1,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,0,0,0,1])
 map.append([1,1,1,1,1,1,1,1,1,1])
 
-#Find Cartesian equation of a ray
-def findEq(slopeAngle,x,y):
-	t = math.tan(slopeAngle)
-	return(t, y - x * t)
 	
-#Find intersection of two lines using their equations in Cartesian
-#def intersect(a,b):
-#	return ((a[1]-b[1])/(b[0]-a[0]), (a[0]*a[1]+b[0]*a[1]-a[0]*b[1]-b[0]*b[1])/(b[0]-a[0]))
-
 #Draw starting screen
 def startingScreen():
 	global game_over
@@ -107,79 +128,82 @@ def startingScreen():
 				return
 		clock.tick(1)
 
-#Draw what player sees		
+#Draw what player sees
 def drawVision(player, map):
-	screen.fill(WHITE)
-	for i in range(0,46):
+	screen.fill(BLACK)
+	global windowWidth
+	global windowHeight
+	
+	#This is an approximation of the optimal ceiling wideness. It isn't the best approximation but it works for now. Also I call it wideness for lack of a better word
+	min = math.sqrt(2)*120 - 96
+	
+	#Draw  ceiling and floor. Floor has the same wideness as the ceiling
+	pygame.draw.rect(screen, BLUE, (0, 0, windowWidth, (windowHeight-min)/2))
+	pygame.draw.rect(screen, RED, (0, (windowHeight+min)/2, windowWidth, (windowHeight-min)/2))
+	#Now we draw everything else
+	for i in range(0,windowWidth):
 		#Ray casting
-		currAngle = player.AOV + i*pi/180
-		if currAngle != pi/2 and currAngle != -pi/2:
-			slope = math.tan(currAngle)
-		for j in range(1,7):
-			print(1)
-			wally = math.floor(player.y+j/2*math.sin(player.AOV-i*pi/180))
-			wallx = math.floor(player.x+j/2*math.cos(player.AOV-i*pi/180))
-			pygame.draw.rect(screen, SHADOW, (600-i*20,0,20,750))
-			if map[math.floor(wally)][math.floor(wallx)]==1:
-				if currAngle != pi/2 and currAngle!= -pi/2 and currAngle != 0 and currAngle != pi: 
-					#intersect ray with y = wally
-					pair1 = (player.x + (wally  - player.y)/slope, wally )
-					#intersect ray with x = wallx + 1
-					pair2 = (wallx + 1, slope * (wallx + 1 - player.x) + player.y)
-					print('pair1 ', pair1)
-					print('wallx ', wallx)
-					if pair1[0] <= wallx or pair1[0]>=wallx+1: pair1 = pair2
-				elif currAngle != pi/2 or currAngle!= -pi/2: pair1 = (wallx, player.y)
-				else: pair1 = (player.x, wally)
-				print()
-				print('pair1 ', pair1)
-				print('currAngle ', currAngle)
-				print('dist ', math.sqrt((player.y-pair1[1])**2+(player.x-pair1[0])**2))
-				print('slope ', slope)
-				print()
-				dist = math.sqrt((player.y-pair1[1])**2+(player.x-pair1[0])**2)
-				pygame.draw.rect(screen, (228-50*dist,0,228-50*dist), (600+i*20-10,0,20,750))
-				break
-		currAngle = player.AOV - i*pi/180
-		if currAngle != pi/2 and currAngle != -pi/2:
-			slope = math.tan(currAngle)
-		for j in range(1,7):
-			print(1)
-			wally = math.floor(player.y+j/2*math.sin(player.AOV-i*pi/180))
-			wallx = math.floor(player.x+j/2*math.cos(player.AOV-i*pi/180))
-			pygame.draw.rect(screen, SHADOW, (600+i*20,0,20,750))
-			if map[math.floor(wally)][math.floor(wallx)]==1:
-				if currAngle != pi/2 and currAngle!= -pi/2 and currAngle != 0 and currAngle != pi: 
-					#intersect ray with y = wally
-					pair1 = (player.x + (wally  - player.y)/slope, wally )
-					#intersect ray with x = wallx + 1
-					pair2 = (wallx + 1, slope * (wallx + 1 - player.x) + player.y)
-					print('pair1 ', pair1)
-					print('wallx ', wallx)
-					if pair1[0] <= wallx or pair1[0]>=wallx+1: pair1 = pair2
-				elif currAngle != pi/2 or currAngle!= -pi/2: pair1 = (wallx, player.y)
-				else: pair1 = (player.x, wally)
-				print()
-				print('pair1 ', pair1)
-				print('currAngle ', currAngle)
-				print('dist ', math.sqrt((player.y-pair1[1])**2+(player.x-pair1[0])**2))
-				print('slope ', slope)
-				print()
-				dist = math.sqrt((player.y-pair1[1])**2+(player.x-pair1[0])**2)
-				pygame.draw.rect(screen, (228-50*dist,0,228-50*dist), (600+i*20-10,0,20,750))
+		
+		#We get the angle at which the ray is cast, its sine and its cosine
+		currAngle = player.AOV - (i*FOV)/windowWidth
+		sinA = math.sin(currAngle)
+		cosA = math.cos(currAngle)
+		
+		#Now trace along the ray for collision with objects
+		for j in range(1,48):
+			#Check if ray collides with anything
+			if map[math.floor(player.y+j*sinA/16)][math.floor(player.x+j*cosA/16)]==1:
+				#If it collides, get length of segment to draw on screen
+				#This is where shit gets real. If you don't like math you can just call it magic
+				#Assume that the image we initially get is the surface of a cylinder (it would actually be a sphere, but this isn't a real 3D game, no need to other with a third dimension)
+				#Now get leftmost and rightmost lines on the segment we see (we dont see the whole thing, we have a limited FOV
+				#Draw a plane through those two lines (you can always do that, those lines are parallel)
+				#Project the surface onto the plane and adjust wrt actual distance. 
+				#The best adjustment wrt distance i have found is 8/distance, i cant think of an actual formula for it. You can goof around with it and find a better estimate
+				lengthSegment = math.floor(windowHeight*math.cos(FOV/2)/(math.cos(FOV/2-i*FOV/windowWidth))*8/j)
+				
+				#This line here is technically unnecessary but im too lazy to get rid of it
+				dim2 = (windowHeight-lengthSegment)//2
+				
+				#Draw segment on screen
+				pygame.draw.rect(screen, (192-3*j,192-3*j,192-3*j), (i,dim2,1,lengthSegment))
 				break
 	pygame.display.flip()
 startingScreen()
 
 while running:
+	#If the 'X' in the top right corner of the window is pressed, quit
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
-			sys.exit()
+			break
+			
+	#If ESC is pressed, quit
 	if keyboard.is_pressed('Esc'):
 		break
+	
+	#Rotate player. 'Q' rotates the player left, 'E' rotates right, pressing both cancels them out. This changes the direction in which the player is looking
 	if keyboard.is_pressed('q'):
 		player.rotate(1)
 	if keyboard.is_pressed('e'):
 		player.rotate(-1)
+		
+	#Get player movement direction. 'W' for forward, 'S' for backward, 'A' for left, 'D' for right. 'W' and 'S' cancel eachother out, same for 'A' and 'D'
+	if keyboard.is_pressed('w'):
+		player.direction[0]+=math.cos(player.AOV - pi/6)
+		player.direction[1]+=math.sin(player.AOV - pi/6)
+	if keyboard.is_pressed('a'):
+		player.direction[0]+=math.cos(player.AOV - pi/6 + pi/2)
+		player.direction[1]+=math.sin(player.AOV - pi/6 + pi/2)
+	if keyboard.is_pressed('s'):
+		player.direction[0]+=math.cos(player.AOV - pi/6 + pi)
+		player.direction[1]+=math.sin(player.AOV - pi/6 + pi)
+	if keyboard.is_pressed('d'):
+		player.direction[0]+=math.cos(player.AOV - pi/6 - pi/2)
+		player.direction[1]+=math.sin(player.AOV - pi/6 - pi/2)
+		
+	#Actually move player
+	player.move()
+	
+	#Draw what the player sees
 	drawVision(player,map)
 	clock.tick(15)
