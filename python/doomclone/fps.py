@@ -17,6 +17,9 @@ PURPLE = (102, 0, 102)
 LIGHTPURPLE= (153, 0, 153)
 BLACK = (0, 0, 0)
 
+#Debug stuff
+framecounter = 0
+
 #PI
 pi = 3.1415926535897932
 
@@ -29,9 +32,10 @@ score = 0
 FOV  = pi/3
 
 #Settings
+FPS = 30
 mapD = 10
-sensitivity = 1/20
-speed = 0.15
+sensitivity = 1/FPS
+speed = 4.5/FPS
 windowWidth = 720
 windowHeight = 480
 
@@ -58,9 +62,13 @@ class Player:
 	def rotate(self,dir):
 		self.AOV+= dir * pi*sensitivity
 	
-	#Collision check
+	#Collision check. Dont ask how it works. It just does
 	def checkCollision(self, map):
-		if map[math.floor(self.y + self.direction[1]*speed)][math.floor(self.x + self.direction[1]*speed)]==1:
+		cy = self.y + self.direction[1]*speed
+		cx = self.x + self.direction[0]*speed
+		fcy = math.floor(cy)
+		fcx = math.floor(cx)
+		if map[fcy][fcx]==1 or (cy==fcy and map[math.floor(cy+self.direction[1]*speed)][fcx]==1) or (cx==fcx and map[fcy][math.floor(cx+self.direction[0]*speed)]==1):
 			return True
 		return False
 		
@@ -138,17 +146,19 @@ def startingScreen():
 #Draw what player sees
 def drawVision(player, map):
 	screen.fill(BLACK)
+	#This should always be a multiple of three. 96 does best in terms of performance/graphic quality ratio
+	precision = 96
 	global windowWidth
 	global windowHeight
-	
+	global framecounter
 	#This is an approximation of the optimal ceiling wideness. It isn't the best approximation but it works for now. Also I call it wideness for lack of a better word
 	min = math.sqrt(2)*120 - 96
-	
+		
 	#Draw  ceiling and floor. Floor has the same wideness as the ceiling
 	pygame.draw.rect(screen, BLUE, (0, 0, windowWidth, (windowHeight-min)/2))
 	pygame.draw.rect(screen, RED, (0, (windowHeight+min)/2, windowWidth, (windowHeight-min)/2))
 	#Now we draw everything else
-	for i in range(0,windowWidth):
+	for i in range(2,windowWidth+1):
 		#Ray casting
 		
 		#We get the angle at which the ray is cast, its sine and its cosine
@@ -157,21 +167,27 @@ def drawVision(player, map):
 		cosA = math.cos(currAngle)
 		
 		#Now trace along the ray for collision with objects
-		for j in range(1,96):
+		for j in range(1,precision):
 			#Check if ray collides with anything, currently we only need to worry about walls
-			if map[math.floor(player.y+j*sinA/32)][math.floor(player.x+j*cosA/32)]==1:
+			if map[math.floor(player.y+3*j*sinA/precision)][math.floor(player.x+3*j*cosA/precision)]==1:
 				#If it collides, get length of segment to draw on screen
 				#This is where shit gets real. If you don't like math you can just call it magic
 				#Assume that the image we initially get is the surface of a cylinder (it would actually be a sphere, but this isn't a real 3D game, no need to other with a third dimension)
 				#Now get leftmost and rightmost lines on the segment we see (we dont see the whole thing, we have a limited FOV
 				#Draw a plane through those two lines (you can always do that, those lines are parallel)
 				#Project the surface onto the plane and adjust wrt actual distance. 
-				#The best adjustment wrt distance I have found thus far is 8/distance, i cant think of an actual formula for it. You can goof around with it and find a better estimate if you feel like it
-				lengthSegment = math.floor(windowHeight*math.cos(FOV/2)/(math.cos(FOV/2-i*FOV/windowWidth))*16/j)
+				#The best adjustment wrt distance I have found thus far is 1/6*distance, i cant think of an actual formula for it. You can goof around with it and find a better estimate if you feel like it
+				lengthSegment = math.floor(windowHeight*math.cos(FOV/2)/(math.cos(FOV/2-i*FOV/windowWidth))*precision/(6*j))
+				
+				#lengthSegment gets excessively large for smaller values of j. It can potentially get up to a value of over 5414, which makes drawing the screen much slower in some cases (meaning FPS below 1 if you get right in frony of a wall). Set a hard cap of windowHeight for lengthSegment to avoid this
+				if lengthSegment>windowHeight: lengthSegment = windowHeight
 				
 				#Draw segment on screen
-				pygame.draw.rect(screen, (192-3*j/2,192-3*j/2,192-3*j/2), (i,(windowHeight-lengthSegment)//2,1,lengthSegment))
+				col = 192-j*192//precision
+				pygame.draw.rect(screen, (col,col,col), (i,(windowHeight-lengthSegment)//2,1,lengthSegment))
 				break
+	framecounter+=1
+	print(framecounter)
 	pygame.display.flip()
 startingScreen()
 
@@ -210,4 +226,4 @@ while running:
 	
 	#Draw what the player sees
 	drawVision(player,map)
-	clock.tick(12)
+	clock.tick(30)
