@@ -226,4 +226,4 @@ while running:
 	
 	#Draw what the player sees
 	drawVision(player,map)
-	clock.tick(30)
+	clock.tick(FPS)
