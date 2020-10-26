@@ -59,22 +59,29 @@ class Player:
 		self.AOV+= dir * pi*sensitivity
 	
 	#Collision check
-	def checkCollision(self,map):
+	def checkCollision(self, map):
 		if map[math.floor(self.y + self.direction[1]*speed)][math.floor(self.x + self.direction[1]*speed)]==1:
-			return true
-		return false
+			return True
+		return False
 		
 	#Move method
-	def move(self):
+	def move(self, map):
 		#Check for collision
-		if self.checkCollision:
+		if self.checkCollision(map):
 			self.direction = [0,0]
 			return
-			
+		
 		#Now move player in current direction
 		self.x+= self.direction[0]*speed
 		self.y+= self.direction[1]*speed
 		
+		#Teleportation prototype. It's a bit buggy 
+		#if math.floor(self.x)==1 and math.floor(self.y)==1:
+		#	self.x = 7
+		#	self.y = 7
+		#if math.floor(self.x)==8 and math.floor(self.y)==8:
+		#	self.x = 2
+		#	self.y = 1
 		#Reset direction
 		self.direction = [0,0]
 	def __init__(self):
@@ -89,12 +96,12 @@ player = Player()
 map = []
 map.append([1,1,1,1,1,1,1,1,1,1])
 map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,1,1,0,0,0,0,0,1])
+map.append([1,0,1,1,0,0,0,0,0,1])
 map.append([1,0,0,0,0,0,0,0,0,1])
-map.append([1,0,0,0,0,0,0,0,0,1])
-map.append([1,0,0,0,0,0,0,0,0,1])
-map.append([1,0,0,0,0,0,0,0,0,1])
-map.append([1,0,0,0,0,0,0,0,0,1])
-map.append([1,0,0,0,0,0,0,0,0,1])
+map.append([1,0,0,0,0,0,1,1,1,1])
+map.append([1,0,0,0,0,0,1,0,1,1])
+map.append([1,0,0,0,0,0,1,0,1,1])
 map.append([1,0,0,0,0,0,0,0,0,1])
 map.append([1,1,1,1,1,1,1,1,1,1])
 
@@ -150,23 +157,20 @@ def drawVision(player, map):
 		cosA = math.cos(currAngle)
 		
 		#Now trace along the ray for collision with objects
-		for j in range(1,48):
-			#Check if ray collides with anything
-			if map[math.floor(player.y+j*sinA/16)][math.floor(player.x+j*cosA/16)]==1:
+		for j in range(1,96):
+			#Check if ray collides with anything, currently we only need to worry about walls
+			if map[math.floor(player.y+j*sinA/32)][math.floor(player.x+j*cosA/32)]==1:
 				#If it collides, get length of segment to draw on screen
 				#This is where shit gets real. If you don't like math you can just call it magic
 				#Assume that the image we initially get is the surface of a cylinder (it would actually be a sphere, but this isn't a real 3D game, no need to other with a third dimension)
 				#Now get leftmost and rightmost lines on the segment we see (we dont see the whole thing, we have a limited FOV
 				#Draw a plane through those two lines (you can always do that, those lines are parallel)
 				#Project the surface onto the plane and adjust wrt actual distance. 
-				#The best adjustment wrt distance i have found is 8/distance, i cant think of an actual formula for it. You can goof around with it and find a better estimate
-				lengthSegment = math.floor(windowHeight*math.cos(FOV/2)/(math.cos(FOV/2-i*FOV/windowWidth))*8/j)
-				
-				#This line here is technically unnecessary but im too lazy to get rid of it
-				dim2 = (windowHeight-lengthSegment)//2
+				#The best adjustment wrt distance I have found thus far is 8/distance, i cant think of an actual formula for it. You can goof around with it and find a better estimate if you feel like it
+				lengthSegment = math.floor(windowHeight*math.cos(FOV/2)/(math.cos(FOV/2-i*FOV/windowWidth))*16/j)
 				
 				#Draw segment on screen
-				pygame.draw.rect(screen, (192-3*j,192-3*j,192-3*j), (i,dim2,1,lengthSegment))
+				pygame.draw.rect(screen, (192-3*j/2,192-3*j/2,192-3*j/2), (i,(windowHeight-lengthSegment)//2,1,lengthSegment))
 				break
 	pygame.display.flip()
 startingScreen()
@@ -202,8 +206,8 @@ while running:
 		player.direction[1]+=math.sin(player.AOV - pi/6 - pi/2)
 		
 	#Actually move player
-	player.move()
+	player.move(map)
 	
 	#Draw what the player sees
 	drawVision(player,map)
-	clock.tick(15)
+	clock.tick(12)
