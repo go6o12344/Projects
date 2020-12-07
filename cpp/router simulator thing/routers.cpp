@@ -11,10 +11,8 @@ char* copy(char* dest, string src){
 }
 vector<string> split_string(string input_string);
 string remove_quote(string str){
-	auto it = str.begin();
-	for(;it!=str.end();it++){
-		if((*it)=='\"')str.erase(it);
-	}
+	if(str.begin()=="\"")str.erase(str.begin());
+	if(str.end()-1=="\"")str.erase(str.end()-1);
 	return str;
 }
 struct route_info{
