@@ -27,7 +27,7 @@ struct route_info{
 	}
 };
 bool more_packages(route_info* a, route_info* b){
-	return a->packages_sent<b->packages_sent; //promenqsh ako bugi sorta
+	return a->packages_sent>b->packages_sent; //promenqsh ako bugi sorta
 }
 int get_all_sent_count(list<route_info*> i){
 	int r = 0;
@@ -122,7 +122,7 @@ public:
 				auto it = this->routing_table.begin();
 				advance(it,in(this->routing_table,package.receiver));
 				printf("Route found. Sending package to %s.\n", this->connections.at((*it)->connection_index)->address.c_str());
-				//printf("Package sent successfully.\n");
+				printf("Package sent successfully.\n");
 				this->connections.at((*it)->connection_index)->send_package(package);
 				(*it)->packages_sent++;
 				return;
