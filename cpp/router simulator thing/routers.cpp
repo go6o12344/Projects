@@ -1,5 +1,15 @@
 #include <bits/stdc++.h>
+/*
+This code simulates the workings of a router network.
+We have class Router, class Package and a struct route_info.
+*/
 
+/*
+Routers remember other routers they are connected to in a vector of pointers.
+Each router has a name and IP address.
+Each router has a routing table. Routing tables contain routing info.
+Routing info consists of an IP(the route's destination), an index pointing to a neighbour of the sender, and the amount of packages sent.
+*/
 using namespace std;
 char* copy(char* dest, string src){
 	dest = (char*) calloc(1,src.length()+1);
@@ -89,7 +99,10 @@ public:
 		if(in(this->routing_table,address)+1)return 1;
 		for(auto it = this->connections.begin();it!=this->connections.end();it++){
 			if((*it)->query_route(address, hop_count-1)){
-				if(this->routing_table.size()==routes_max)this->routing_table.pop_back();
+				if(this->routing_table.size()==routes_max){
+					delete this->routing_table.back();
+					this->routing_table.pop_back();
+				}
 				this->routing_table.push_back(new route_info(address,it-this->connections.begin()));
 				return 1;
 			}
@@ -132,6 +145,11 @@ public:
 		}
 		printf("package received successfully.\n");
 	}
+	~Router() {
+		for(auto i = routing_table.begin(); i != routing_table.end(); i ++) {
+			delete *i;
+		}
+    }
 };
 const int Router::routes_max = 10;
 const int Router::hops_max = 15;
@@ -177,6 +195,10 @@ main(){
 		}
 	}
 	in.close();
+	while(auto it = routers_all.begin();routers_all.size();){
+		delete routers_all.begin()->second;
+		routers_all.erase(routers_all.begin());
+	}
 	return 0;
 }
 vector<string> split_string(string input_string) {
