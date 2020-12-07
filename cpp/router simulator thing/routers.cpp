@@ -1,6 +1,4 @@
 #include <bits/stdc++.h>
-#include <Windows.h>
-#define ednl endl
 
 using namespace std;
 char* copy(char* dest, string src){
