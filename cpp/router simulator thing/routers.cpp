@@ -110,7 +110,7 @@ public:
 		return 0;
 	}
 	void send_package(const Package& package){
-		if(get_all_sent_count(this->routing_table)!=0 and not get_all_sent_count(this->routing_table)%10){
+		if(get_all_sent_count(this->routing_table)==0 or not get_all_sent_count(this->routing_table)%10){
 					printf("Sorting routing table.\n");
 					this->routing_table.sort(more_packages);
 					printf("Sorting successful.\n");
