@@ -21,8 +21,8 @@ char* copy(char* dest, string src){
 }
 vector<string> split_string(string input_string);
 string remove_quote(string str){
-	if(str.begin()=="\"")str.erase(str.begin());
-	if(str.end()-1=="\"")str.erase(str.end()-1);
+	if((*str.begin())=='\"')str.erase(str.begin());
+	if((*(str.end()-1))=='\"')str.erase(str.end()-1);
 	return str;
 }
 struct route_info{
@@ -60,7 +60,7 @@ public:
 	static int counter ;
 	int package_number;
 	int validate(){
-		return strlen(content)==content_length ? 1 : 0;
+		return strlen(content)==content_length;
 	}
 	Package(char* content, string sender, string receiver){
 		if(strlen(content)==0)throw "Empty content";
@@ -144,6 +144,7 @@ public:
 			
 		}
 		printf("package received successfully.\n");
+		delete &package;
 	}
 	~Router() {
 		for(auto i = routing_table.begin(); i != routing_table.end(); i ++) {
@@ -195,7 +196,7 @@ main(){
 		}
 	}
 	in.close();
-	while(auto it = routers_all.begin();routers_all.size();){
+	for(auto it = routers_all.begin();routers_all.size();){
 		delete routers_all.begin()->second;
 		routers_all.erase(routers_all.begin());
 	}
