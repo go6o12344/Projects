@@ -38,14 +38,15 @@ bool more_packages(route_info* a, route_info* b){
 	return a->packages_sent>b->packages_sent; //promenqsh ako bugi sorta
 }
 int get_all_sent_count(list<route_info*> i){
+	if(not i.size()) return 0;
 	int r = 0;
-	auto it = i.begin();
-	for(;it!=i.end();it++){
+	for(auto it = i.begin();;it!=i.end();it++){
 		r=r+(*it)->packages_sent;
 	}
 	return r;
 }
 int in (list<route_info*> routes, string address){
+	if(not routes.size()) return 0;
 	for(auto it = routes.begin();it!=routes.end();it++){
 		if(not (*it)->address.compare(address))return distance(routes.begin(),it);
 	}
