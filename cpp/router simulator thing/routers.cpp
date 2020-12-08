@@ -38,7 +38,6 @@ bool more_packages(route_info* a, route_info* b){
 	return a->packages_sent>b->packages_sent; //promenqsh ako bugi sorta
 }
 int get_all_sent_count(list<route_info*> i){
-	if(!i.size())return 0;
 	int r = 0;
 	auto it = i.begin();
 	for(;it!=i.end();it++){
@@ -111,7 +110,7 @@ public:
 		return 0;
 	}
 	void send_package(const Package& package){
-		if(get_all_sent_count(this->routing_table)==0 or not get_all_sent_count(this->routing_table)%10){
+		if(get_all_sent_count(this->routing_table)!=0 and not get_all_sent_count(this->routing_table)%10){
 					printf("Sorting routing table.\n");
 					this->routing_table.sort(more_packages);
 					printf("Sorting successful.\n");
