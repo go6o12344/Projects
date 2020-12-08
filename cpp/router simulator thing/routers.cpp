@@ -38,6 +38,7 @@ bool more_packages(route_info* a, route_info* b){
 	return a->packages_sent>b->packages_sent; //promenqsh ako bugi sorta
 }
 int get_all_sent_count(list<route_info*> i){
+	if(!i.size())return 0;
 	int r = 0;
 	auto it = i.begin();
 	for(;it!=i.end();it++){
