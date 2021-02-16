@@ -4,4 +4,5 @@ namely each router has a name and an IP address. "network.txt" describes direct 
 the routers. It requires two IPs, and the connection is double-ended. "packages.txt" describes
 the packages, more specifically packages need to have some content(a string in this case), a sender
 IP and a receiver IP. Each separate query should be on a new line, and no empty lines should be left
-at the bottom of any document.
+at the bottom of any document. Also, the program doesn't check for invalid input. It will try to run
+with invalid input, fail miserably, and most likely cause a segfault.
