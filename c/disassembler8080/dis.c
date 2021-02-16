@@ -3,7 +3,8 @@
 
 char registers[8] = {B, C, D, E, H, L, M, A};
 char operations[8][3] = {"ADD", "ADC", "SUB", "SBB", "ANA", "XRA", "ORA", "CMP"};
-
+char calls[8][3] = {"CNZ","CZ ","CNC","CC ","CPO","CPE","CP ","CM "};
+char rets[8][3] = {"RNZ", "RZ ", "RNC", "RC ", "RPO", "RPE", "RP ", "RM "};
 main(){
 	char input;
 	FILE* file;
@@ -321,35 +322,97 @@ main(){
 		if(input & 0xc6 == 0xc2){
 			switch((input & 0x38) >> 3){
 				case 0:
-					printf("JNZ\n");
+					printf("JNZ");
 					break;
 				case 1:
-					printf("JZ\n");
+					printf("JZ");
 					break;
 				case 2:
-					printf("JNC\n");
+					printf("JNC");
 					break;
 				case 3:
-					printf("JC\n");
+					printf("JC");
 					break;
 				case 4:
-					printf("JPO\n");
+					printf("JPO");
 					break;
 				case 5:
-					printf("JPE\n");
+					printf("JPE");
 					break;
 				case 6:
-					printf("JP\n");
+					printf("JP");
 					break;
 				case 7:
-					printf("JM\n");
+					printf("JM");
 					break;
 			}
 			fgetc(input);
+			printf("%x", input);
 			fgetc(input);
+			printf("%x\n", input);
 			continue;
 		}
-		
+		//Call subtroutine; same as jump but can return control flow
+		//11xx x10x
+		if(input = 0xcc){
+			printf("CALL ");
+			fgetc(input);
+			printf("%x", input);
+			fgetc(input);
+			printf("%x\n", input);
+			continue;
+		}
+		else if(input & 0xc6 == 0xc4){
+			printf("%s ", calls[(input >> 3) & 0x07]);
+			fgetc(input);
+			printf("%x", input);
+			fgetc(input);
+			printf("%x\n", input);
+			continue;
+		}
+		//return from subroutine, returns control flow to the caller
+		//11xx x 00 x
+		if(input == 0xc9){
+			printf("RET\n");
+			continue;
+		}
+		else if(input & 0xc6 == 0xc0){
+			printf("%s\n", rets[(input >> 3) & 0x07]);
+			continue;
+		}
+		//RST; restart control flow 11xx x111
+		if(input & 0xc7 == 0xc7){
+			printf("RST ");
+			printf("%d\n", (input >> 3) & 0x07);
+		}
+		//Enable interrupts
+		if(input == 0xfb){
+			printf("EI\n");
+			continue;
+		}
+		//Disable interrupts
+		if(input == 0xf3){
+			printf("DI\n");
+			continue;
+		}
+		//I/O
+		//IN
+		if(input == 0xdb){
+			fgetc(input);
+			printf("IN %d", input);
+			continue;
+		}
+		//OUT
+		if(input = 0xd3){
+			fgetc(input);
+			printf("OUT %d", input);
+			continue;
+		}
+		//Halt; 0111 0110
+		if(input == 0x76){
+			printf("HLT");
+			continue;
+		}
 	}
 	fclose(fp);
 }
